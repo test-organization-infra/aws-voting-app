@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: result
+  name: result
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: result
+  template:
+    metadata:
+      labels:
+        app: result
+    spec:
+      containers:
+      - image: 716635345492.dkr.ecr.us-east-1.amazonaws.com/result-app:latest
+        name: result
+        ports:
+        - containerPort: 80
+          name: result
