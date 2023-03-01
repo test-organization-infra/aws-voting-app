@@ -2,22 +2,29 @@ provider "aws" {
   region = var.region
 }
 
+provider "docker" {}
+
 data "aws_availability_zones" "available" {}
 
 locals {
-  cluster_name = "education-eks-${random_string.suffix.result}"
+  cluster_name = "voting-app-cluster"
 }
 
-resource "random_string" "suffix" {
-  length  = 8
-  special = false
-}
+# resource "aws_ecr_repository" "ecr" {
+#  for_each = toset(var.ecr_name)
+#  name = each.key
+#  image_tag_mutability = var.image_mutability
+#  encryption_configuration {
+#   encryption_type = var.encrypt_type
+#  }
+#  tags = var.tags
+# }
 
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "3.19.0"
 
-  name = "education-vpc"
+  name = "voting-app-vpc"
 
   cidr = "10.0.0.0/16"
   azs  = slice(data.aws_availability_zones.available.names, 0, 3)
@@ -58,17 +65,17 @@ module "eks" {
 
   eks_managed_node_groups = {
     one = {
-      name = "node-group-1"
+      name = "voting-app-node-1"
 
       instance_types = ["t3.small"]
 
       min_size     = 1
-      max_size     = 3
-      desired_size = 2
+      max_size     = 2
+      desired_size = 1
     }
 
     two = {
-      name = "node-group-2"
+      name = "voting-app-node-2"
 
       instance_types = ["t3.small"]
 
@@ -77,4 +84,8 @@ module "eks" {
       desired_size = 1
     }
   }
+}
+
+module "ecr-repo" {
+  source = "terraform-aws-modules/ecr/aws"
 }

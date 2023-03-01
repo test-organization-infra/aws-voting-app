@@ -28,6 +28,11 @@ terraform {
       source  = "hashicorp/cloudinit"
       version = "~> 2.2.0"
     }
+
+    docker = {
+      source    = "kreuzwerker/docker"
+      version   = "~> 2.20.0"
+    }
   }
 
   required_version = "~> 1.3"
