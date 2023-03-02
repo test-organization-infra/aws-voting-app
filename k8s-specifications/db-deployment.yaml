@@ -27,7 +27,7 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: votesecretpassword
+              name: votesecretuser
               key: password
         ports:
         - containerPort: 5432
@@ -36,8 +36,8 @@ spec:
         - mountPath: /var/lib/postgresql/data
           name: db-data
         - name: secrets-store-inline
-            mountPath: "/mnt/secrets-store"
-            readOnly: true
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
       volumes:
       - name: db-data
         emptyDir: {}

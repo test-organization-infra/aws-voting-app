@@ -1,8 +1,15 @@
 # Init variables
-export REGION="us-east-1"
-export CLUSTERNAME="CLUSTERNAME"
+export REGION="${1}"
+export CLUSTERNAME="${2}"
+
+# Install dependencies
+helm repo add secrets-store-csi-driver https://kubernetes-sigs.github.io/secrets-store-csi-driver/charts
+helm install -n kube-system csi-secrets-store secrets-store-csi-driver/secrets-store-csi-driver --set syncSecret.enabled=true
+kubectl apply -f https://raw.githubusercontent.com/aws/secrets-store-csi-driver-provider-aws/main/deployment/aws-provider-installer.yaml
+
 # Create the secet
-aws --region "$REGION" secretsmanager  create-secret --name MySecret --secret-string 'MY_SECRET'
+aws --region "$REGION" secretsmanager create-secret --name PostgresUser --secret-string "${3}"
+aws --region "$REGION" secretsmanager create-secret --name PostgresPassword --secret-string "${4}"
 
 # Define the Policy
 POLICY_ARN=$(aws --region "$REGION" --query Policy.Arn --output text iam create-policy --policy-name my-deployment-policy --policy-document '{
@@ -10,7 +17,7 @@ POLICY_ARN=$(aws --region "$REGION" --query Policy.Arn --output text iam create-
     "Statement": [ {
         "Effect": "Allow",
         "Action": ["secretsmanager:GetSecretValue", "secretsmanager:DescribeSecret"],
-        "Resource": ["arn:*:secretsmanager:*:*:secret:MySecret-??????"]
+        "Resource": ["arn:*:secretsmanager:*:*:secret:PostgresUser-??????", "arn:*:secretsmanager:*:*:secret:PostgresPassword-??????"]
     }]
 }')
 
