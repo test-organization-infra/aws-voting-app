@@ -14,20 +14,36 @@ spec:
       labels:
         app: db
     spec:
+      serviceAccountName: vote-deployment-sa
       containers:
       - image: postgres:15-alpine
         name: postgres
         env:
         - name: POSTGRES_USER
-          value: postgres
+          valueFrom:
+            secretKeyRef:
+              name: votesecretuser
+              key: username
         - name: POSTGRES_PASSWORD
-          value: postgres
+          valueFrom:
+            secretKeyRef:
+              name: votesecretpassword
+              key: password
         ports:
         - containerPort: 5432
           name: postgres
         volumeMounts:
         - mountPath: /var/lib/postgresql/data
           name: db-data
+        - name: secrets-store-inline
+            mountPath: "/mnt/secrets-store"
+            readOnly: true
       volumes:
       - name: db-data
-        emptyDir: {} 
+        emptyDir: {}
+      - name: secrets-store-inline
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "vote-deployment-aws-secrets"
