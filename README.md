@@ -53,7 +53,7 @@ kubernetes according the configuration inside k8s-specifications folder.
 
 ## Run the app in Kubernetes
 
-The folder k8s-specifications contains the YAML specifications of the Voting App's services.
+The folder `k8s-specifications` contains the YAML specifications of the Voting App's services.
 
 Run the following command to create the deployments and services. Note it will create these resources in your current namespace (`default` if you haven't changed it.)
 
@@ -61,7 +61,7 @@ Run the following command to create the deployments and services. Note it will c
 kubectl create -f k8s-specifications/
 ```
 
-The `vote` web app is then available on port 31000 on each host of the cluster, the `result` web app is available on port 31001.
+The `vote` web app is then available on port 31000 on each host of the cluster, the `result` web app is available on port `31001`.
 
 To remove them, run:
 
@@ -172,22 +172,68 @@ aws eks --region <region> update-kubeconfig --name <name of cluster EKS>
 ```
 7. Go to your container config folder, where you have k8 configs like `service.yaml` and `deployment.yaml`.
 
-8. To ensure the yaml was applied
+8. Apply deployment and service yaml configuration.
 ```shell
 kubectl apply -f deployment.yaml
 kubectl get deployments
 ```
+Example
+```shell
+kubectl apply -f vote-deployment.yaml
+kubectl apply -f vote-service.yaml
+kubectl apply -f db-deployment.yaml
+kubectl apply -f db-service.yaml
+kubectl apply -f redis-deployment.yaml
+kubectl apply -f redis-service.yaml
+kubectl apply -f result-deployment.yaml
+kubectl apply -f result-service.yaml
+kubectl apply -f worker-deployment.yaml
+```
+
+```shell
+kubectl get deployments
+```
+Output
+```shell
+NAME     READY   UP-TO-DATE   AVAILABLE   AGE
+db       1/1     1            1           54m
+redis    1/1     1            1           96m
+result   1/1     1            1           35m
+vote     1/1     1            1           3h23m
+worker   1/1     1            1           36m
+```
+
 9. Check pods were created
 ```shell
 kubectl get pods -o wide
+```
+Output
+```shell
+NAME                      READY   STATUS    RESTARTS   AGE     IP           NODE                   NOMINATED NODE   READINESS GATES
+db-8845b68b7-wm8qf        1/1     Running   0          56m     10.0.x.x   ip-10-0-x-x.ec2.internal   <none>           <none>
+redis-549d6f9fc6-pp6jc    1/1     Running   0          98m     10.0.x.x   ip-10-0-x-x.ec2.internal   <none>           <none>
+result-78476b5b8c-cbxws   1/1     Running   0          37m     10.0.x.x   ip-10-0-x-x.ec2.internal   <none>           <none>
+vote-996fb97fd-md6zf      1/1     Running   0          3h25m   10.0.x.x   ip-10-0-x-x.ec2.internal   <none>           <none>
+worker-f54cd56ff-rls2f    1/1     Running   0          38m     10.0.x.x   ip-10-0-x-x.ec2.internal   <none>           <none>
 ```
 10. Check nodes were created
 ```shell
 kubectl get nodes -o wide
 ```
+Output
+```shell
+NAME                         STATUS   ROLES    AGE    VERSION            INTERNAL-IP EXTERNAL-IP     OS-IMAGE         KERNEL-VERSION             CONTAINER-RUNTIME
+ip-10-0-x-x.ec2.internal   Ready    <none>   5d7h   v1.24.10-eks-48e63af   10.0.x.x    <none>        Amazon Linux 2   5.x.x-x.x.amzn2.x86_64   containerd://1.6.6
+ip-10-0-x-x.ec2.internal   Ready    <none>   5d7h   v1.24.10-eks-48e63af   10.0.x.x    <none>        Amazon Linux 2   5.x.x-x.x.amzn2.x86_64   containerd://1.6.6
+```
 11. Check security goups, inside EC2 search the instance that contains the nodes, under Security groups then add the inbound rules, so your ports are accesible from outside(example `8080` for web apps)
 
 12. Ready, you could use the public IP and the ports to check that your trafic is working
+
+13. To see logs of each deployment:
+```shell
+kubectl --namespace=default logs -f -l "app=db"
+```
 
 ## Create Load Balancer
 1. Ensure to select the previous `eks` cluster
@@ -196,7 +242,8 @@ aws eks --region us-east-1 update-kubeconfig --name voting-app-cluster
 ```
 2. Enter to `k8s-specifications` folder.
 ```shell
-kubectl create -f loadbalancer.yaml
+kubectl create -f vote-loadbalancer.yaml
+kubectl create -f result-loadbalancer.yaml
 ```
 3. Expose a deployment of LoadBalancer type:
 ```shell
@@ -205,15 +252,18 @@ kubectl expose deployment [deployment-name] --type=LoadBalancer  --name=voting-a
 Example
 ```shell
 kubectl expose deployment vote --type=LoadBalancer  --name=voting-app-loadbalancer
+kubectl expose deployment result --type=LoadBalancer  --name=voting-app-loadbalancer
 ```
 4. Get information about `service`:
 ```shell
-kubectl get service/voting-app-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
+kubectl get service/vote-app-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
+kubectl get service/result-app-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
 ```
 The output will return an external ip
 ```shell
 NAME                     TYPE          EXTERNAL-IP                                                              PORT(S)
-voting-app-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
+vote-app-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
+result-app-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
 ```
 5. Verify that you can access the load balancer externally using the external ip from previous step:
 ```shell
@@ -248,7 +298,7 @@ POLICY_ARN=$(aws --region "$REGION" --query Policy.Arn --output text iam create-
     }]
 }')
 ```
-6. Install oidc-provider in the cluster
+6. Install `oidc-provider` in the cluster
 ```shell
 eksctl utils associate-iam-oidc-provider --region="$REGION" --cluster="$CLUSTERNAME" --approve
 ```
