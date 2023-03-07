@@ -130,32 +130,32 @@ docker push 716635345492.dkr.ecr.us-east-1.amazonaws.com/voting-app
 apiVersion: eksctl.io/v1alpha5
 kind: ClusterConfig
 metadata:
-name: voting-app-Cluster
-region: us-east-1
+  name: voting-app-cluster
+  region: us-east-1
 
 vpc:
-id: vpc-09ee0ce943b8c8d63
-cidr: "192.168.0.0/16"
-subnets:
-public:
-us-east-1:
-id: subnet-04257581011106487
-us-east-1:
-id: subnet-0684eb5ade0256973
-private:
-us-east-1:
-id: subnet-083e6c24a30ae4ed2
-us-east-1:
-id: subnet-083e6c24a30ae4ed2
+  id: vpc-09ee0ce943b8c8d63
+  cidr: "192.168.0.0/16"
+  subnets:
+    public:
+      us-east-1:
+        id: subnet-04257581011106487
+      us-east-1:
+        id: subnet-0684eb5ade0256973
+    private:
+      us-east-1:
+        id: subnet-083e6c24a30ae4ed2
+      us-east-1:
+        id: subnet-083e6c24a30ae4ed2
 
 nodeGroups:
-- name: voting-app-workers
-instanceType: t2.medium
-desiredCapacity: 2
-- name: voting-app-workers
-instanceType: t2.medium
-desiredCapacity: 1
-privateNetworking: true
+  - name: voting-app-workers
+    instanceType: t2.medium
+    desiredCapacity: 2
+  - name: voting-app-workers
+    instanceType: t2.medium
+    desiredCapacity: 1
+    privateNetworking: true
 ````
 
 4. Create EKS with eks cli.
@@ -189,10 +189,39 @@ kubectl get nodes -o wide
 
 12. Ready, you could use the public IP and the ports to check that your trafic is working
 
-## Create Load Balance
-TBD
+## Create Load Balancer
+1. Ensure to select the previous `eks` cluster
+```shell
+aws eks --region us-east-1 update-kubeconfig --name voting-app-cluster
+```
+2. Enter to `k8s-specifications` folder.
+```shell
+kubectl create -f loadbalancer.yaml
+```
+3. Expose a deployment of LoadBalancer type:
+```shell
+kubectl expose deployment [deployment-name] --type=LoadBalancer  --name=voting-app-loadbalancer
+```
+Example
+```shell
+kubectl expose deployment vote --type=LoadBalancer  --name=voting-app-loadbalancer
+```
+4. Get information about `service`:
+```shell
+kubectl get service/voting-app-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
+```
+The output will return an external ip
+```shell
+NAME                     TYPE          EXTERNAL-IP                                                              PORT(S)
+voting-app-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
+```
+5. Verify that you can access the load balancer externally using the external ip from previous step:
+```shell
+curl -silent *****.us-east-1.elb.amazonaws.com | grep title
+```
 
-## User AWS Secrets Manager
+
+## Use AWS Secrets Manager
 1. Install helm cli: https://helm.sh/docs/intro/install/
 2. Install eksctl: https://github.com/weaveworks/eksctl
 3. Install `cis-driver` in the cluster
