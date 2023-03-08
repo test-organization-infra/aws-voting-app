@@ -51,7 +51,7 @@ kubernetes according the configuration inside k8s-specifications folder.
 9. The ui is running up in http://localhost:5000 and the insights app running in http://localhost:5001
 
 
-## Run the app in Kubernetes
+## Run locally with Kubernetes
 
 The folder `k8s-specifications` contains the YAML specifications of the Voting App's services.
 
@@ -123,7 +123,7 @@ Example
 docker push 716635345492.dkr.ecr.us-east-1.amazonaws.com/voting-app
 ````
 ## Create EKS
-1. Download and install eksctl — Official [CLI tool](https://github.com/weaveworks/eksctl) for AWS EKS.
+1. Download and install eksctl: [Official CLI tool](https://github.com/weaveworks/eksctl) for `AWS EKS`.
 2. Create VPC with this template: https://amazon-eks.s3.us-west-2.amazonaws.com/cloudformation/2020-06-10/amazon-eks-vpc-private-subnets.yaml
 3. Create cluster with config file:
 ```yaml
@@ -262,7 +262,7 @@ kubectl get service/result-app-loadbalancer |  awk {'print $1" " $2 " " $4 " " $
 The output will return an external ip
 ```shell
 NAME                     TYPE          EXTERNAL-IP                                                              PORT(S)
-vote-app-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
+vote-app-loadbalancer    LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
 result-app-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
 ```
 5. Verify that you can access the load balancer externally using the external ip from previous step:
@@ -308,3 +308,31 @@ eksctl create iamserviceaccount --name my-deployment-sa --region="$REGION" --clu
 ```
 More documentation: https://github.com/aws/secrets-store-csi-driver-provider-aws
 https://secrets-store-csi-driver.sigs.k8s.io/topics/set-as-env-var.html
+
+## Use Terraform to automate creation of EKS and VPC
+The folder `terraform` contains the files: `main.tf`, `outputs.tf`, `terraform.tf`.
+They have the configuration for creating of `EKS` and `VPC` in an automated way from previous steps.
+
+1. In the folder `terraform` execute the next command.
+
+```shell
+terraform init
+```
+
+2. For validating if the terraform configuration is correct:
+
+```shell
+terraform plan
+```
+
+3. Apply changes to aws
+
+```shell
+terraform apply
+```
+
+4. To delete all configurations:
+
+```shell
+terraform destroy
+```
