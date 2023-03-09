@@ -93,7 +93,7 @@ aws ecr get-login-password --region <region_name>
 
 Example:
 ```shell
-aws ecr --region us-east-1 | docker login -u AWS -p <token> 716635345492.dkr.ecr.us-east-1.amazonaws.com/voting-app
+aws ecr --region us-east-1 | docker login -u AWS -p <token> 71663534xxxx.dkr.ecr.us-east-1.amazonaws.com/voting-app
 ```
 
 4. Login to our AWS private ECR.
@@ -102,7 +102,7 @@ aws ecr --region <region> | docker login -u AWS -p <encrypted_token> <repo_uri>
 ```
 Example:
 ```shell
-aws ecr --region <region> | docker login -u AWS -p <encrypted_token> 716635345492.dkr.ecr.us-east-1.amazonaws.com/voting-app
+aws ecr --region <region> | docker login -u AWS -p <encrypted_token> 71663534xxxx.dkr.ecr.us-east-1.amazonaws.com/voting-app
 ```
 
 5. Tag a local docker image.
@@ -111,7 +111,7 @@ docker tag <source_image_tag> <target_ecr_repo_uri>
 ```
 Example:
 ```shell
-docker tag voting-app:latest 716635345492.dkr.ecr.us-east-1.amazonaws.com/voting-app:latest
+docker tag voting-app:latest 71663534xxxx.dkr.ecr.us-east-1.amazonaws.com/voting-app:latest
 ```
 
 6. Push docker image to ECR.
@@ -120,7 +120,7 @@ docker push <ecr-repo-uri>
 ````
 Example
 ```shell
-docker push 716635345492.dkr.ecr.us-east-1.amazonaws.com/voting-app
+docker push 71663534xxxx.dkr.ecr.us-east-1.amazonaws.com/voting-app
 ````
 ## Create EKS
 1. Download and install eksctl: [Official CLI tool](https://github.com/weaveworks/eksctl) for `AWS EKS`.
