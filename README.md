@@ -16,7 +16,7 @@ The purpose of this app is to know what is the most preferred way to learn by: L
 * A [Node.js](/result) web app which shows the results of the voting in real time
 
 ## Challenge
-
+The goal of the challenge is to deploy this distributed application into AWS cloud provider, using:
 - Use [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started) for create the AWS infrastructure.
 - Use [EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html) for create the virtual server.
 - Use [EKS](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/amazon-elastic-kubernetes-service.html) for orchestration docker images.
