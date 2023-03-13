@@ -19,7 +19,7 @@ The purpose of this app is to know what is the most preferred way to learn by: L
 The goal of the challenge is to deploy this distributed application into AWS cloud provider, using:
 - Use [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started) for create the AWS infrastructure.
 - Use [EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html) for create the virtual server.
-- Use [EKS](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/amazon-elastic-kubernetes-service.html) for orchestration docker images.
+- Use [EKS](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/amazon-elastic-kubernetes-service.html) for orchestration.
 - Use [ECR](https://docs.aws.amazon.com/AmazonECR/latest/userguide/what-is-ecr.html) to save docker images.
 - Use [AWS Secrets Manager](https://docs.aws.amazon.com/secretsmanager/latest/userguide/intro.html).
 - Use Github Action or Circle CI for triggers a pipeline.
@@ -38,35 +38,34 @@ This solution is created in `N. Virginia` region (`us-east-1`):
 
 
 ## Implement solution
-## Run locally docker images
+## Run locally with K8 and Minikube.
 1. Cloning this repository in local machine: https://github.com/ivanthoughtworks/aws-voting-app.
 2. Install [minikube](https://minikube.sigs.k8s.io/docs/start/).
 3. Start cluster with minikube: `minikube start`
-4. To access to a new cluster`kubectl get po -A`
-5. Use this command if you don't have minikube installed`minikube kubectl -- get po -A`
+4. To access to a new cluster `minikube kubectl -- get po -A`
+5. Use this command if you don't have minikube installed `kubectl get po -A`
 6. Use alias to use minikube with kubectl `alias kubectl="minikube kubectl --"`
-7. To run a service to see all cluster `minikube dashboard`. Attached image: minikube-dashboard.png
-8. In the project root, run `kubectl create -f k8s-specifications/` to create 
-kubernetes according the configuration inside k8s-specifications folder.
-9. The ui is running up in http://localhost:5000 and the insights app running in http://localhost:5001
+7. To run a service to see all cluster `minikube dashboard`.
+8. In the project root, run `kubectl create -f k8s-specifications-local`. Note it will create these resources in your current namespace (`default` if you haven't changed it).
+9. The vote web app is then available on port `31000` on each host of the cluster, the result web app is available on port `31001`.
+10. To remove them, run: `kubectl delete -f k8s-specifications-local/`
 
+## Run locally with Docker compose
 
-## Run locally with Kubernetes
-
-The folder `k8s-specifications` contains the YAML specifications of the Voting App's services.
+Another option is run the application with docker compose.
 
 Run the following command to create the deployments and services. Note it will create these resources in your current namespace (`default` if you haven't changed it.)
 
 ```shell
-kubectl create -f k8s-specifications/
+docker compose up
 ```
 
-The `vote` web app is then available on port 31000 on each host of the cluster, the `result` web app is available on port `31001`.
+Vote app is running up in http://localhost:5000 and the result app running in http://localhost:5001
 
 To remove them, run:
 
 ```shell
-kubectl delete -f k8s-specifications/
+docker compose down
 ```
 
 ## Build docker images and upload to ECR
@@ -124,7 +123,7 @@ docker push 71663534xxxx.dkr.ecr.us-east-1.amazonaws.com/voting-app
 ````
 ## Create EKS
 1. Download and install eksctl: [Official CLI tool](https://github.com/weaveworks/eksctl) for `AWS EKS`.
-2. Create VPC with this template: https://amazon-eks.s3.us-west-2.amazonaws.com/cloudformation/2020-06-10/amazon-eks-vpc-private-subnets.yaml
+2. Create VPC with this template using [AWS CloudFormation](https://aws.amazon.com/cloudformation/): https://amazon-eks.s3.us-west-2.amazonaws.com/cloudformation/2020-06-10/amazon-eks-vpc-private-subnets.yaml
 3. Create cluster with config file:
 ```yaml
 apiVersion: eksctl.io/v1alpha5
@@ -134,26 +133,26 @@ metadata:
   region: us-east-1
 
 vpc:
-  id: vpc-09ee0ce943b8c8d63
+  id: <vpc-id-created-in-step2> # i.e: vpc-09ee0ce943b8cxxxx
   cidr: "192.168.0.0/16"
   subnets:
     public:
       us-east-1:
-        id: subnet-04257581011106487
-      us-east-1:
-        id: subnet-0684eb5ade0256973
+        id: <subnet-public-id-created-in-step2> # i.e: subnet-0425758101110xxxx
+      us-east-1a:
+        id: <subnet-public-id-created-in-step2> # i.e: subnet-0684eb5ade025xxxx
     private:
       us-east-1:
-        id: subnet-083e6c24a30ae4ed2
-      us-east-1:
-        id: subnet-083e6c24a30ae4ed2
+        id: <subnet-private-id-created-in-step2> # i.e: subnet-083e6c24a30aexxxx
+      us-east-1b:
+        id: <subnet-private-id-created-in-step2> # i.e: subnet-083e6c24a30aexxxx
 
 nodeGroups:
-  - name: voting-app-workers
-    instanceType: t2.medium
+  - name: voting-app-node-1
+    instanceType: t3.small
     desiredCapacity: 2
-  - name: voting-app-workers
-    instanceType: t2.medium
+  - name: voting-app-node-2
+    instanceType: t3.small
     desiredCapacity: 1
     privateNetworking: true
 ````
@@ -162,13 +161,13 @@ nodeGroups:
 ```shell
 eksctl create cluster -f cluster.yaml --kubeconfig=~/.kube/config
 ```
-5. Confirm that it is all good.
-```shell
-kubectl get svc
-```
-6. Write these configuration details to config file issue following command.
+5. Use local command line console with EKS cluster.
 ```shell
 aws eks --region <region> update-kubeconfig --name <name of cluster EKS>
+```
+6. Confirm that it is all good.
+```shell
+kubectl get svc
 ```
 7. Go to your container config folder, where you have k8 configs like `service.yaml` and `deployment.yaml`.
 
@@ -226,13 +225,22 @@ NAME                         STATUS   ROLES    AGE    VERSION            INTERNA
 ip-10-0-x-x.ec2.internal   Ready    <none>   5d7h   v1.24.10-eks-48e63af   10.0.x.x    <none>        Amazon Linux 2   5.x.x-x.x.amzn2.x86_64   containerd://1.6.6
 ip-10-0-x-x.ec2.internal   Ready    <none>   5d7h   v1.24.10-eks-48e63af   10.0.x.x    <none>        Amazon Linux 2   5.x.x-x.x.amzn2.x86_64   containerd://1.6.6
 ```
-11. Check security goups, inside EC2 search the instance that contains the nodes, under Security groups then add the inbound rules, so your ports are accesible from outside(example `8080` for web apps)
 
-12. Ready, you could use the public IP and the ports to check that your trafic is working
-
-13. To see logs of each deployment:
+11. To see logs of each deployment:
 ```shell
 kubectl --namespace=default logs -f -l "app=db"
+```
+
+12. For removing a deployment or service:
+
+```shell
+kubectl delete deployment [deployment-name]
+kubectl delete service [service-name]
+```
+Example:
+```shell
+kubectl delete deployment vote
+kubectl delete service vote
 ```
 
 ## Create Load Balancer
