@@ -1,0 +1,60 @@
+name: Create image on ECR
+
+on:
+  workflow_call:
+    inputs:
+      ecr-repo-name:
+        required: true
+        type: string
+      app-dir:
+        required: true
+        type: string
+    secrets:
+      aws-access-key-id:
+        required: true
+      aws-secret-access-key:
+        required: true
+      aws-region:
+        required: true
+
+jobs:
+  create-image:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./${{ inputs.app-dir }}
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.aws-access-key-id }}
+        aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+        aws-region: ${{ secrets.aws-region }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build, tag, and push image to Amazon ECR - VOTE & RESULT
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ inputs.ecr-repo-name }}
+        IMAGE_TAG: latest
+      if: ${{ inputs.ecr-repo-name != 'worker' }}
+      run: |
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Build, tag, and push image to Amazon ECR - WORKER
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ inputs.ecr-repo-name }}
+        IMAGE_TAG: latest
+      if: ${{ inputs.ecr-repo-name == 'worker' }}
+      run: |
+        docker buildx build --platform "linux/arm64/v8" -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
