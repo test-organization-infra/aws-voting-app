@@ -344,3 +344,6 @@ terraform apply
 ```shell
 terraform destroy
 ```
+
+## Next Steps
+- Create ECR images - WIP 
