@@ -35,6 +35,8 @@ module "vpc" {
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
     "kubernetes.io/role/internal-elb"             = 1
   }
+
+  tags = var.tags
 }
 
 module "eks" {
@@ -74,6 +76,8 @@ module "eks" {
       desired_size = 1
     }
   }
+
+  tags = var.tags
 }
 
 module "ecr-repo" {
