@@ -255,23 +255,23 @@ kubectl create -f result-loadbalancer.yaml
 ```
 3. Expose a deployment of LoadBalancer type:
 ```shell
-kubectl expose deployment [deployment-name] --type=LoadBalancer  --name=voting-app-loadbalancer
+kubectl expose deployment [deployment-name] --type=LoadBalancer  --name=vote-loadbalancer
 ```
 Example
 ```shell
-kubectl expose deployment vote --type=LoadBalancer  --name=voting-app-loadbalancer
-kubectl expose deployment result --type=LoadBalancer  --name=voting-app-loadbalancer
+kubectl expose deployment vote --type=LoadBalancer  --name=vote-loadbalancer
+kubectl expose deployment result --type=LoadBalancer  --name=vote-loadbalancer
 ```
 4. Get information about `service`:
 ```shell
-kubectl get service/vote-app-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
-kubectl get service/result-app-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
+kubectl get service/vote-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
+kubectl get service/result-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
 ```
 The output will return an external ip
 ```shell
 NAME                     TYPE          EXTERNAL-IP                                                              PORT(S)
-vote-app-loadbalancer    LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
-result-app-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
+vote-loadbalancer    LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
+result-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
 ```
 5. Verify that you can access the load balancer externally using the external ip from previous step:
 ```shell
