@@ -1,0 +1,69 @@
+on: 
+  workflow_call:
+    inputs:
+      ecr-repo-name:
+        required: true
+        type: string
+      deploy-name:
+        required: true
+        type: string
+    secrets:
+      aws-access-key-id:
+        required: true
+      aws-secret-access-key:
+        required: true
+      aws-region:
+        required: true
+      kube_config_data:
+        required: true
+name: deploy
+jobs:
+  deploy:
+    name: deploy to cluster
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.aws-access-key-id }}
+        aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+        aws-region: ${{ secrets.aws-region }}
+    
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: restart deployment
+      uses: kodermax/kubectl-aws-eks@1.1.0
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.kube_config_data }}
+        ECR_REPOSITORY: ${{ inputs.ecr-repo-name }}
+        KUBECTL_VERSION: "v1.23.6"
+        IAM_VERSION: "0.5.6"
+      with:
+        args: rollout restart deploy ${{ inputs.deploy-name }}
+
+    - name: deploy to cluster
+      uses: kodermax/kubectl-aws-eks@1.1.0
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.kube_config_data }}
+        KUBECTL_VERSION: "v1.23.6"
+        IAM_VERSION: "0.5.6"
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITORY: ${{ inputs.ecr-repo-name }}
+        IMAGE_TAG: latest
+      with:
+        args: set image deployment/${{ inputs.deploy-name }} ${{ inputs.deploy-name }}=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: verify deployment
+      uses: kodermax/kubectl-aws-eks@1.1.0
+      env:
+        KUBE_CONFIG_DATA: ${{ secrets.kube_config_data }}
+        KUBECTL_VERSION: "v1.23.6"
+        IAM_VERSION: "0.5.6"
+        ECR_REPOSITORY: ${{ inputs.ecr-repo-name }}
+      with:
+        args: rollout status deployment/${{ inputs.deploy-name }}

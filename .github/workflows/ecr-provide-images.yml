@@ -37,3 +37,24 @@ jobs:
       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       aws-region: ${{ secrets.AWS_REGION }}
 
+  deploy-vote-image:
+    uses: ./.github/workflows/eks-deploy-image.yml
+    with:
+      ecr-repo-name: vote-app
+      deploy-name: vote
+    secrets:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws-region: ${{ secrets.AWS_REGION }}
+      kube_config_data: ${{ secrets.KUBE_CONFIG_DATA }}
+
+  deploy-result-image:
+    uses: ./.github/workflows/eks-deploy-image.yml
+    with:
+      ecr-repo-name: result-app
+      deploy-name: result
+    secrets:
+      aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      aws-region: ${{ secrets.AWS_REGION }}
+      kube_config_data: ${{ secrets.KUBE_CONFIG_DATA }}
