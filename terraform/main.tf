@@ -10,16 +10,6 @@ locals {
   cluster_name = "voting-app-cluster"
 }
 
-# resource "aws_ecr_repository" "ecr" {
-#  for_each = toset(var.ecr_name)
-#  name = each.key
-#  image_tag_mutability = var.image_mutability
-#  encryption_configuration {
-#   encryption_type = var.encrypt_type
-#  }
-#  tags = var.tags
-# }
-
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "3.19.0"
@@ -88,4 +78,10 @@ module "eks" {
 
 module "ecr-repo" {
   source = "terraform-aws-modules/ecr/aws"
+}
+
+resource "aws_ecr_repository" "ecr" {
+  for_each = toset(var.ecr_name)
+  name = each.key
+  image_tag_mutability = var.image_mutability
 }

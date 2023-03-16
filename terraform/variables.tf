@@ -5,15 +5,15 @@ variable "region" {
 }
 
 variable "ecr_name" {
-  description = "Name of the repository"
+  description = "Name of the repositories"
   type = list(string)
-  default = null
+  default = ["vote-app", "result-app", "worker"]
 }
 
 variable "image_mutability" {
   description = "Provide image mutability"
   type = string
-  default = "IMMUTABLE"
+  default = "MUTABLE"
 }
 
 variable "encrypt_type" {
