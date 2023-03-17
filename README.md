@@ -260,7 +260,7 @@ kubectl expose deployment [deployment-name] --type=LoadBalancer  --name=vote-loa
 Example
 ```shell
 kubectl expose deployment vote --type=LoadBalancer  --name=vote-loadbalancer
-kubectl expose deployment result --type=LoadBalancer  --name=vote-loadbalancer
+kubectl expose deployment result --type=LoadBalancer  --name=result-loadbalancer
 ```
 4. Get information about `service`:
 ```shell
@@ -277,6 +277,8 @@ result-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/T
 ```shell
 curl -silent *****.us-east-1.elb.amazonaws.com | grep title
 ```
+**NOTE:** If curl works but in the browser the url doesn't work, please ensure that port `80` is enable for cluster and node in the `Inbound Rules` option from `Security Groups` in `EC2`.
+![image](./aws-inbound-rules.png)
 
 
 ## Use AWS Secrets Manager
@@ -345,5 +347,8 @@ terraform apply
 terraform destroy
 ```
 
-## Next Steps
-- Create ECR images - WIP 
+## Github Actions
+- In order to use Github Actions, it is needed to create a user in aws with permissions policies for EKS, EC2.
+![image](./aws-github-user.png)
+- Add user's security credentials into secrets variables in Github.
+- Actions are automatizing the building of docker images and push them to ECR repositories.
