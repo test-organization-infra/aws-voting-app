@@ -255,28 +255,30 @@ kubectl create -f result-loadbalancer.yaml
 ```
 3. Expose a deployment of LoadBalancer type:
 ```shell
-kubectl expose deployment [deployment-name] --type=LoadBalancer  --name=voting-app-loadbalancer
+kubectl expose deployment [deployment-name] --type=LoadBalancer  --name=vote-loadbalancer
 ```
 Example
 ```shell
-kubectl expose deployment vote --type=LoadBalancer  --name=voting-app-loadbalancer
-kubectl expose deployment result --type=LoadBalancer  --name=voting-app-loadbalancer
+kubectl expose deployment vote --type=LoadBalancer  --name=vote-loadbalancer
+kubectl expose deployment result --type=LoadBalancer  --name=result-loadbalancer
 ```
 4. Get information about `service`:
 ```shell
-kubectl get service/vote-app-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
-kubectl get service/result-app-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
+kubectl get service/vote-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
+kubectl get service/result-loadbalancer |  awk {'print $1" " $2 " " $4 " " $5'} | column -t
 ```
 The output will return an external ip
 ```shell
 NAME                     TYPE          EXTERNAL-IP                                                              PORT(S)
-vote-app-loadbalancer    LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
-result-app-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
+vote-loadbalancer    LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
+result-loadbalancer  LoadBalancer  *****.us-east-1.elb.amazonaws.com  80:31981/TCP
 ```
 5. Verify that you can access the load balancer externally using the external ip from previous step:
 ```shell
 curl -silent *****.us-east-1.elb.amazonaws.com | grep title
 ```
+**NOTE:** If curl works but in the browser the url doesn't work, please ensure that port `80` is enable for cluster and node in the `Inbound Rules` option from `Security Groups` in `EC2`.
+![image](./aws-inbound-rules.png)
 
 
 ## Use AWS Secrets Manager
@@ -345,5 +347,8 @@ terraform apply
 terraform destroy
 ```
 
-## Next Steps
-- Create ECR images - WIP 
+## Github Actions
+- In order to use Github Actions, it is needed to create a user in aws with permissions policies for EKS, EC2.
+![image](./aws-github-user.png)
+- Add user's security credentials into secrets variables in Github.
+- Actions are automatizing the building of docker images and push them to ECR repositories.
