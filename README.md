@@ -351,4 +351,49 @@ terraform destroy
 - In order to use Github Actions, it is needed to create a user in aws with permissions policies for EKS, EC2.
 ![image](./aws-github-user.png)
 - Add user's security credentials into secrets variables in Github.
-- Actions are automatizing the building of docker images and push them to ECR repositories.
+- Actions are automatizing the building of docker images, push them to ECR repositories and deploy to EKS.
+
+- Deploy to EKS pipeline requires a Github action's secred called KUBE_CONFIG_DATA, it should contains the eks config file in base64, to set it follow the next instructions:
+
+1. Autenticate in AWS CLI as the user github-actions-user using its kEY and SECRET
+
+2. Review the authenticated user in your cli, it should be github-actions-user
+
+```shell
+aws sts get-caller-identity
+```
+3. Connect to the EKS Cluter. It will generete automatically, a config file inside the .kube folder
+```shell
+aws eks --region us-east-1 update-kubeconfig --name voting-app-cluster
+```
+4. Obtain this config file in base64
+```shell
+cat $HOME/.kube/config | base64
+```
+5. Copy the result and set it in Github for the secred KUBE_CONFIG_DATA
+
+- Deploy to EKS pipeline requires grant access to the cluster for the user github-actions-user using the file configMap
+
+1. Review the configMap
+```shell
+kubectl describe -n kube-system configmap/aws-auth
+```
+![image](./configmap-initial.png)
+
+2. Add the section mapUser shown below after the mapRoles section
+```shell
+kubectl edit -n kube-system configmap/aws-auth
+```
+```shell
+mapUsers: |
+    - userarn: arn:aws:iam::716635345492:user/github-actions-user
+      username: github-actions-user
+      groups:
+        - system:masters
+```
+3. Be sure that the changes were applied
+```shell
+kubectl describe -n kube-system configmap/aws-auth
+```
+now you should obtain an output like this
+![image](./configmap-final.png)
