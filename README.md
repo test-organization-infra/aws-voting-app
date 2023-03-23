@@ -46,15 +46,13 @@ This solution is created in `N. Virginia` region (`us-east-1`):
 5. Use this command if you don't have minikube installed `kubectl get po -A`
 6. Use alias to use minikube with kubectl `alias kubectl="minikube kubectl --"`
 7. To run a service to see all cluster `minikube dashboard`.
-8. In the project root, run `kubectl create -f k8s-specifications-local`. Note it will create these resources in your current namespace (`default` if you haven't changed it).
+8. In the project root, run `kubectl create -f k8s-specifications-local`. Note: it will create these resources in your current namespace (`default` if you haven't changed it).
 9. The vote web app is then available on port `31000` on each host of the cluster, the result web app is available on port `31001`.
 10. To remove them, run: `kubectl delete -f k8s-specifications-local/`
 
 ## Run locally with Docker compose
 
 Another option is run the application with docker compose.
-
-Run the following command to create the deployments and services. Note it will create these resources in your current namespace (`default` if you haven't changed it.)
 
 ```shell
 docker compose up
