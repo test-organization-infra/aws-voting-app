@@ -81,11 +81,12 @@ body{
   top: 50%;
   transform: translateY(-50%);
   text-align: left;
-  padding-left: 50px;
+  padding-left: 35px;
 }
 
 #choice .choice .label{
   text-transform: uppercase;
+  font-size: 25px;
 }
 
 #choice .choice.dogs{
